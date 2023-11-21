@@ -167,7 +167,7 @@ class ModelSelector:
             }
         }
 
-    def fit(self):
+    def start(self):
         '''
         Fits the model selection pipeline
         '''
