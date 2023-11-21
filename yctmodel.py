@@ -322,47 +322,55 @@ class ModelSelector:
         data : pandas DataFrame
             The data to be used for model tuning.
         """
+        try:
+            # Extract the model from the pipeline
+            model_to_tune = pipeline.steps[-1][1]
+            model_name = type(model_to_tune).__name__
 
-        # Extract the model from the pipeline
-        model_to_tune = pipeline.steps[-1][1]
-        model_name = type(model_to_tune).__name__
+            # Preprocess the data using the pipeline (excluding the last step)
+            preprocessing_pipe = Pipeline(pipeline.steps[:-1])
+            X_preprocessed = preprocessing_pipe.fit_transform(data.drop(self.target, axis=1))
+            y_preprocessed = data[self.target].values
 
-        # Preprocess the data using the pipeline (excluding the last step)
-        preprocessing_pipe = Pipeline(pipeline.steps[:-1])
-        X_preprocessed = preprocessing_pipe.fit_transform(data.drop(self.target, axis=1))
-        y_preprocessed = data[self.target].values
+            # Select parameters dictionary
+            params_dict = self.models_parameters_classification if self.task == 'class' else self.models_parameters_regression
 
-        # Check if the task is classification or regression and set the parameters dictionary
-        if self.task == 'class':
-            params_dict = self.models_parameters_classification
-        elif self.task == 'reg':
-            params_dict = self.models_parameters_regression
-        else:
-            raise ValueError("Task must be either 'class' or 'reg'")
-
-        # Match the model with its corresponding parameters in the dictionary
-        if model_name in params_dict:
+            # Match the model with its parameters
+            if model_name not in params_dict:
+                raise ValueError(f"Model {model_name} not found in parameters dictionary")
             model_params = params_dict[model_name]['params']
-        else:
-            raise ValueError(f"Model {model_name} not found in parameters dictionary")
 
-        # Perform RandomizedSearchCV
-        search = RandomizedSearchCV(
-            model_to_tune,
-            param_distributions=model_params,
-            n_iter=10,
-            cv=5,
-            random_state=42,
-            n_jobs=-1
-        )
-        search.fit(X_preprocessed, y_preprocessed)
+            # Perform RandomizedSearchCV
+            search = RandomizedSearchCV(
+                model_to_tune,
+                param_distributions=model_params,
+                n_iter=5,  # Reduced for less intensive computation
+                cv=5,
+                random_state=42,
+                n_jobs=1  # Reduce parallel processing load
+            )
+            search.fit(X_preprocessed, y_preprocessed)
 
-        # Return the best parameters and the tuned model
-        best_params = search.best_params_
-        print(f"Best parameters for {model_name}: {best_params}")
+            # Return the best parameters and the tuned model
+            best_params = search.best_params_
+            print(f"Best parameters for {model_name}: {best_params}")
+        self.tuned_model = model_name
+        self.tuned_params = best_params
+            # Update the model in the pipeline
+            tuned_model = clone(model_to_tune).set_params(**best_params)
+            pipeline.steps[-1] = (pipeline.steps[-1][0], tuned_model)
 
-        # Update the model in the pipeline with the best parameters
-        tuned_model = clone(model_to_tune).set_params(**best_params)
-        pipeline.steps[-1] = (pipeline.steps[-1][0], tuned_model)
+            return pipeline
+        
 
-        return pipeline
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return None
+    def get_tuned_model(self):
+        '''
+        Returns
+        -------
+        The Model Name
+        The Parameters
+        '''
+        return self.tuned_model, self.tuned_params
