@@ -195,7 +195,7 @@ class ModelSelector:
             self.result_model = GridSearchCV(pipe, models, cv=5, scoring='r2')
             self.result_model.fit(self.complete_pipe.transform(self.X_train), self.y_train)
             self.select_best_regressor()
-
+    
     def get_pipeline(self):
         '''
         Returns
@@ -273,6 +273,9 @@ class ModelSelector:
         self.final_regressor_model = make_pipeline(self.complete_pipe, self.regressor_ensemble)
 
     def evaluate(self):
+        '''
+        Evaluates the final model and prints the results
+        '''
         # Fit the final model and predict
         self.final_model.fit(self.X_train, self.y_train)
         y_pred = self.final_model.predict(self.X_test)
@@ -280,9 +283,76 @@ class ModelSelector:
         # Evaluate the model
         final_score = accuracy_score(self.y_test, y_pred)
         final_precision = precision_score(self.y_test, y_pred)
-        return final_score, final_precision
 
-    def print_results(self):
-        final_score, final_precision = self.evaluate()
+        # Print the results
         print(f"The Final score of our generated Model is: {final_score*100:.2f}%")
         print(f"The Precision of our generated Model is: {final_precision*100:.2f}%")
+      
+    
+    def predict_unknown(self, unknown_data):
+        '''
+        Parameters
+        ----------
+        unknown_data : pandas DataFrame
+            The data to be used for prediction
+        '''
+        self.final_model.fit(self.X_train, self.y_train)
+        y_pred = self.final_model.predict(unknown_data)
+        unknown_data['Predicted'] = y_pred
+        return pd.DataFrame(unknown_data)
+    
+    def auto_tuning(self, complete_pipe, data):
+        """
+        Automatically tunes the model in the pipeline using RandomizedSearchCV.
+
+        Parameters
+        ----------
+        complete_pipe : sklearn Pipeline
+            The complete pipeline including the model to be tuned.
+        data : pandas DataFrame
+            The data to be used for model tuning.
+        """
+
+        # Extract the model from the pipeline
+        model_to_tune = complete_pipe.steps[-1][1]
+        model_name = type(model_to_tune).__name__
+
+        # Preprocess the data using the pipeline (excluding the last step)
+        preprocessing_pipe = Pipeline(complete_pipe.steps[:-1])
+        X_preprocessed = preprocessing_pipe.fit_transform(data.drop(self.target, axis=1))
+        y_preprocessed = data[self.target].values
+
+        # Check if the task is classification or regression and set the parameters dictionary
+        if self.task == 'class':
+            params_dict = self.models_parameters_classification
+        elif self.task == 'reg':
+            params_dict = self.models_parameters_regression
+        else:
+            raise ValueError("Task must be either 'class' or 'reg'")
+
+        # Match the model with its corresponding parameters in the dictionary
+        if model_name in params_dict:
+            model_params = params_dict[model_name]['params']
+        else:
+            raise ValueError(f"Model {model_name} not found in parameters dictionary")
+
+        # Perform RandomizedSearchCV
+        search = RandomizedSearchCV(
+            model_to_tune,
+            param_distributions=model_params,
+            n_iter=10,
+            cv=5,
+            random_state=42,
+            n_jobs=-1
+        )
+        search.fit(X_preprocessed, y_preprocessed)
+
+        # Return the best parameters and the tuned model
+        best_params = search.best_params_
+        print(f"Best parameters for {model_name}: {best_params}")
+
+        # Update the model in the pipeline with the best parameters
+        tuned_model = clone(model_to_tune).set_params(**best_params)
+        complete_pipe.steps[-1] = (complete_pipe.steps[-1][0], tuned_model)
+
+        return complete_pipe
