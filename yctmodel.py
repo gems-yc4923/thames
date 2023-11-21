@@ -20,7 +20,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Lasso
 
 class ModelSelector:
-    def __init__(self, data, target, complete_pipe, task='class', i=2):
+    def __init__(self, data, target, complete_pipe, task='class', i=2, precision = 0.2):
         '''
         Parameters
         ----------
@@ -34,6 +34,9 @@ class ModelSelector:
             The task to be performed, by default 'class', or 'reg'
         i : int, optional
             The number of best models to be selected, by default 2, Maximum 6. (The more the longer it takes to run)
+        precision : int, optional
+            From 0.1 to 1, the higher the more precise the model selection is, but the longer
+            the time it needs to run, by default 20
         ----------
         Returns
         ----------
@@ -42,7 +45,9 @@ class ModelSelector:
         self.complete_pipe = complete_pipe
         self.i = i
         self.data = data
-        self.data = self.data.sample(frac=0.2, random_state=42)
+        if precision > 1 or precision < 0.1:
+            raise ValueError("Precision must be between 0.1 and 1")
+        self.data = self.data.sample(frac=(precision), random_state=42)
         self.task = task
         if self.task != 'class' and self.task != 'reg':
             raise ValueError("Task must be either 'class' or 'reg'")
@@ -282,11 +287,16 @@ class ModelSelector:
 
         # Evaluate the model
         final_score = accuracy_score(self.y_test, y_pred)
-        final_precision = precision_score(self.y_test, y_pred)
-
+        #calculate the f1 score
+        from sklearn.metrics import f1_score
+        f1 = f1_score(self.y_test, y_pred, average='weighted')
         # Print the results
-        print(f"The Final score of our generated Model is: {final_score*100:.2f}%")
-        print(f"The Precision of our generated Model is: {final_precision*100:.2f}%")
+        #print(f"The Final score of our generated Model is: {final_score*100:.2f}%")
+        #print(f"The Final f1 score of our generated Model is: {f1*100:.2f}%")
+        #Make a Pandas DataFrame to show the score and f1 score
+        score = pd.DataFrame({'Score':[final_score*100], 'F1 Score':[f1*100]})
+        print(score)
+
       
     
     def predict_unknown(self, unknown_data):
@@ -301,24 +311,24 @@ class ModelSelector:
         unknown_data['Predicted'] = y_pred
         return pd.DataFrame(unknown_data)
     
-    def auto_tuning(self, complete_pipe, data):
+    def auto_tuning(self, pipeline, data):
         """
         Automatically tunes the model in the pipeline using RandomizedSearchCV.
 
         Parameters
         ----------
-        complete_pipe : sklearn Pipeline
+        pipeline : sklearn Pipeline
             The complete pipeline including the model to be tuned.
         data : pandas DataFrame
             The data to be used for model tuning.
         """
 
         # Extract the model from the pipeline
-        model_to_tune = complete_pipe.steps[-1][1]
+        model_to_tune = pipeline.steps[-1][1]
         model_name = type(model_to_tune).__name__
 
         # Preprocess the data using the pipeline (excluding the last step)
-        preprocessing_pipe = Pipeline(complete_pipe.steps[:-1])
+        preprocessing_pipe = Pipeline(pipeline.steps[:-1])
         X_preprocessed = preprocessing_pipe.fit_transform(data.drop(self.target, axis=1))
         y_preprocessed = data[self.target].values
 
@@ -353,6 +363,6 @@ class ModelSelector:
 
         # Update the model in the pipeline with the best parameters
         tuned_model = clone(model_to_tune).set_params(**best_params)
-        complete_pipe.steps[-1] = (complete_pipe.steps[-1][0], tuned_model)
+        pipeline.steps[-1] = (pipeline.steps[-1][0], tuned_model)
 
-        return complete_pipe
+        return pipeline
