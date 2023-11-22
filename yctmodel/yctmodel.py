@@ -473,7 +473,7 @@ class AutoTuner:
             }
         }
 
-    def auto_tuning(self):
+    def auto_tune(self):
         '''
         Automatically tunes the model in the pipeline using RandomizedSearchCV.
         Returns
