@@ -488,9 +488,14 @@ class AutoTuner:
         model_name = type(model_to_tune).__name__
 
         # Preprocess the data using the pipeline (excluding the last step)
-        preprocessing_pipe = Pipeline(self.pipeline.steps[:-1])
-        X_preprocessed = preprocessing_pipe.fit_transform(self.X)
-        y_preprocessed = self.Y
+        try:
+            preprocessing_pipe = Pipeline(self.pipeline.steps[:-1])
+            X_preprocessed = preprocessing_pipe.fit_transform(self.X)
+            y_preprocessed = self.Y
+        except TypeError:
+            preprocessing_pipe = Pipeline(self.pipeline.steps[:-1])
+            X_preprocessed = preprocessing_pipe.fit_transform(self.X,self.Y)
+            y_preprocessed = self.Y
 
         # Select parameters dictionary
         if self.task == 'class':
