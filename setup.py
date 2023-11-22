@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name='yctmodel',
-    version='3.1.3',
+    version='2.2.13',
     packages=['yctmodel'],
-    description="ModelSelector automates ensemble pipeline creation with optimized hyperparameters.",
+    description="ModelSelector automates ensemble creation, added AutoTuner.",
     long_description_content_type="text/markdown",
     long_description=open("README.md").read(),
     install_requires=['scikit-learn','pandas','matplotlib',

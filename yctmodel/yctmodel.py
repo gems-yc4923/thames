@@ -344,6 +344,22 @@ class ModelSelector:
     
 class AutoTuner:
     def __init__(self, X, Y, pipeline,task='class'):
+        '''
+        Parameters
+        ----------
+        X : pandas DataFrame
+            The data to be used for model tuning
+        Y : str
+            The target column name
+        pipeline : sklearn Pipeline
+            The complete pipeline including preprocessing and the model 
+        task : str, optional
+            The task to be performed, by default 'class', or 'reg'
+        ----------
+        Returns
+        ----------
+        Run auto_tuning() to get the final pipeline
+        '''
         self.X = X
         self.Y = Y
         self.pipeline = pipeline
