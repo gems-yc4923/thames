@@ -275,7 +275,7 @@ class ModelSelector:
         from sklearn.pipeline import make_pipeline
         from sklearn.ensemble import VotingRegressor
         self.regressor_ensemble = VotingRegressor(estimators=final_models)
-        self.final_model = make_pipeline(self.complete_pipe, self.regressor_ensemble)
+        self.final_regressor_model = make_pipeline(self.complete_pipe, self.regressor_ensemble)
 
     def evaluate(self):
         '''
