@@ -123,7 +123,6 @@ class ModelSelector:
                 'model': LinearRegression(),
                 'params': {
                     'fit_intercept': [True, False],
-                    'normalize': [True, False]
                 }
             },
             'RandomForestRegressor': {
@@ -164,7 +163,6 @@ class ModelSelector:
                 'params': {
                     'alpha': uniform(0.01, 10),
                     'fit_intercept': [True, False],
-                    'normalize': [True, False],
                     'max_iter': [1000, 2000, 3000],
                     'tol': [1e-4, 1e-3, 1e-2],
                     'selection': ['cyclic', 'random']
