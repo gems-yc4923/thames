@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='yctmodel',
-    version='2.1.2',
+    version='3.1.3',
     packages=['yctmodel'],
     description="ModelSelector automates ensemble pipeline creation with optimized hyperparameters.",
     long_description_content_type="text/markdown",
