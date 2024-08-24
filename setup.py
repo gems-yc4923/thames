@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='yctmodel',
-    version='5.2.16',
+    version='5.4.0',
     packages=['yctmodel'],
     description="ModelSelector automates ensemble creation, added AutoTuner.",
     long_description_content_type="text/markdown",

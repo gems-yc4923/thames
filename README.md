@@ -33,15 +33,17 @@ selector = ModelSelector(data=my_data, target='target_column')
 
 # Get the final machine learning pipeline
 final_pipeline = selector.get_pipeline()
+```
 
 ## Features
 
 - **Automated Ensemble Creation:** The `ModelSelector` class automatically generates an ensemble pipeline with a specified number of models, each contributing to the final predictions.
 - **Hyperparameter Optimization:** Utilizes a combination of model selection and hyperparameter tuning to output the best-performing models and their corresponding hyperparameters.
-- **Versatile Usage:** Offers both automatic ensemble creation (`start()`) and the option to fine-tune an existing pipeline with a specific model (`auto_tuning()`).
+- **Versatile Usage:** Offers both ensemble creation (`start()`).
 - **Scoring:** Run the (`evaluate()`) function after ensemble creation to get your scores.
 - **Supports Classification and Regression:** Adaptable for both classification and regression tasks, providing flexibility in application.
 - **Easy Retrieval of Best Pipeline:** Use the `get_pipeline()` function to retrieve the optimized pipeline with the best-performing models.
+- **AutoTuner Class**  Gives the option to fine-tune an existing pipeline with a specific model (`auto_tune()`), given a specific data. Takes X and Y (could be X_train and y_train).
 
 ## Installation
 
@@ -49,4 +51,4 @@ You can install the `ModelSelector` class using pip:
 
 ```bash
 pip install yctmodel
-
+```
