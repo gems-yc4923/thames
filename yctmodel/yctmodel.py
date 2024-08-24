@@ -18,6 +18,14 @@ from scipy.stats import uniform
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Lasso
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import make_pipeline
+from sklearn.ensemble import VotingRegressor
+from sklearn.metrics import f1_score
 
 class ModelSelector:
     def __init__(self, data, target, eda_pipe = None, task='class', i=2, precision = 0.2):
@@ -216,11 +224,6 @@ class ModelSelector:
         Creates a standard EDA Pipeline
 
         '''
-        from sklearn.pipeline import Pipeline
-        from sklearn.preprocessing import StandardScaler
-        from sklearn.impute import SimpleImputer
-        from sklearn.preprocessing import OneHotEncoder
-        from sklearn.compose import ColumnTransformer
 
         num_pipe = Pipeline([
             ('imputer', SimpleImputer(strategy='median')),
@@ -270,7 +273,6 @@ class ModelSelector:
                     print()
 
         # Creating final ensemble model
-        from sklearn.pipeline import make_pipeline
         self.ensemble = VotingClassifier(estimators= final_models, voting='soft')
         self.final_model = make_pipeline(self.complete_pipe, self.ensemble)
 
@@ -303,8 +305,6 @@ class ModelSelector:
                     print()
 
         # Creating final ensemble model for regression
-        from sklearn.pipeline import make_pipeline
-        from sklearn.ensemble import VotingRegressor
         self.regressor_ensemble = VotingRegressor(estimators=final_models)
         self.final_model = make_pipeline(self.complete_pipe, self.regressor_ensemble)
 
@@ -319,7 +319,6 @@ class ModelSelector:
         # Evaluate the model
         final_score = accuracy_score(self.y_test, y_pred)
         #calculate the f1 score
-        from sklearn.metrics import f1_score
         f1 = f1_score(self.y_test, y_pred, average='weighted')
         # Print the results
         #print(f"The Final score of our generated Model is: {final_score*100:.2f}%")
@@ -528,7 +527,6 @@ class AutoTuner:
         tuned_model = clone(model_to_tune).set_params(**best_params)
         self.pipeline.steps[-1] = (self.pipeline.steps[-1][0], tuned_model)
         temporary = self.pipeline.steps[:-1]
-        from sklearn.pipeline import make_pipeline
         self.pipeline = make_pipeline(*temporary, tuned_model)
         return self.pipeline
 
